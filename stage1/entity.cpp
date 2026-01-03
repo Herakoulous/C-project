@@ -4,7 +4,7 @@
 // Entity
 Entity::Entity(float x, float y, int health, Side side)
     : x(x), y(y), size(0.0f), health(health), side(side),
-    timer(1.0f), selected(false), max_health(0), level(0), healing_speed(0.0f), defense(0) , attacking_speed(0){
+    timer(1.0f), selected(false), max_health(0), level(0), healing_speed(0.0f), defense(0), attacking_speed(0) {
 }
 
 bool Entity::contains(float mx, float my) {
@@ -17,7 +17,35 @@ void Entity::onClick() {}
 
 void Entity::draw() {}
 
-void Entity::update(float dt) {}
+void Entity::update(float dt) {
+    float dt_seconds = dt / 1000.0f;
+
+    if (side != Side::NEUTRAL) {
+        if (health < max_health && healing_speed > 0) {
+            timer += dt_seconds;
+            float hp_should_add = healing_speed * timer;
+            int hp_to_add = (int)hp_should_add;
+
+            if (hp_to_add > 0) {
+                health += hp_to_add;
+                float time_used = hp_to_add / healing_speed;
+                timer -= time_used;
+
+                if (health > max_health) {
+                    health = max_health;
+                    timer = 0.0f;
+                }
+            }
+        }
+    }
+    if (health > max_health) {
+        timer += dt_seconds;
+        if (timer >= 1.0f) {
+            health--;
+            timer -= 1.0f;
+        }
+    }
+}
 
 // Baby
 Baby::Baby(float x, float y, int health, Side side)
@@ -25,6 +53,7 @@ Baby::Baby(float x, float y, int health, Side side)
     size = BABY_SIZE;
     max_health = BABY_MAX_HEALTH;
     healing_speed = BABY_HEALING_SPEED;
+    attacking_speed = BABY_ATTACKING_SPEED;
     level = 0;
     defense = 1;
 }
@@ -47,40 +76,13 @@ void Baby::draw() {
     graphics::drawText(x - size / 2, y + size / 2, size / 2, std::to_string(health), br_text);
 }
 
-void Baby::update(float dt) {
-    float dt_seconds = dt / 1000.0f;
-
-    if (health < max_health) {
-        timer += dt_seconds;
-        float hp_should_add = healing_speed * timer;
-        int hp_to_add = (int)hp_should_add;
-
-        if (hp_to_add > 0) {
-            health += hp_to_add;
-            float time_used = hp_to_add / healing_speed;
-            timer -= time_used;
-
-            if (health > max_health) {
-                health = max_health;
-                timer = 0.0f;
-            }
-        }
-    }
-    else if (health > max_health) {
-        timer += dt_seconds;
-        if (timer >= 1.0f) {
-            health--;
-            timer -= 1.0f;
-        }
-    }
-}
-
 // Warrior
 Warrior::Warrior(float x, float y, int health, Side side)
     : Entity(x, y, health, side) {
     size = WARRIOR_SIZE;
     max_health = WARRIOR_MAX_HEALTH;
     healing_speed = WARRIOR_HEALING_SPEED;
+    attacking_speed = WARRIOR_ATTACKING_SPEED;
     level = 1;
     defense = 1;
 }
@@ -101,34 +103,6 @@ void Warrior::draw() {
     graphics::Brush br_text;
     br_text.fill_color[0] = 1.0f; br_text.fill_color[1] = 1.0f; br_text.fill_color[2] = 1.0f;
     graphics::drawText(x - size / 2, y + size / 2, size / 2, std::to_string(health), br_text);
-}
-
-void Warrior::update(float dt) {
-    float dt_seconds = dt / 1000.0f;
-
-    if (health < max_health) {
-        timer += dt_seconds;
-        float hp_should_add = healing_speed * timer;
-        int hp_to_add = (int)hp_should_add;
-
-        if (hp_to_add > 0) {
-            health += hp_to_add;
-            float time_used = hp_to_add / healing_speed;
-            timer -= time_used;
-
-            if (health > max_health) {
-                health = max_health;
-                timer = 0.0f;
-            }
-        }
-    }
-    else if (health > max_health) {
-        timer += dt_seconds;
-        if (timer >= 1.0f) {
-            health--;
-            timer -= 1.0f;
-        }
-    }
 }
 
 bool Warrior::canUpgrade() const {
@@ -203,6 +177,7 @@ Tower::Tower(float x, float y, int health, Side side)
     max_health = TOWER_MAX_HEALTH;
     level = 1;
     healing_speed = TOWER_HEALING_SPEED;
+    attacking_speed = TOWER_ATTACKING_SPEED;
     defense = TOWER_DEFENSE;
 }
 
@@ -222,19 +197,6 @@ void Tower::draw() {
     graphics::Brush br_text;
     br_text.fill_color[0] = 1.0f; br_text.fill_color[1] = 1.0f; br_text.fill_color[2] = 1.0f;
     graphics::drawText(x - size / 4, y + size / 4, size / 4, std::to_string(health), br_text);
-}
-
-void Tower::update(float dt) {
-    float dt_seconds = dt / 1000.0f;
-
-    // Towers don't heal (healing_speed = 0), but handle overheal
-    if (health > max_health) {
-        timer += dt_seconds;
-        if (timer >= 1.0f) {
-            health--;
-            timer -= 1.0f;
-        }
-    }
 }
 
 int Tower::getUpgradeCost() {
@@ -302,13 +264,14 @@ void Tower::performUpgrade() {
     }
 }
 
- //Wizard
-Wizard::Wizard (float x, float y, int health, Side side): Entity(x, y, health, side) {
+// Wizard
+Wizard::Wizard(float x, float y, int health, Side side) : Entity(x, y, health, side) {
     size = WIZARD_SIZE;
     max_health = WIZARD_MAX_HEALTH;
     level = 1;
     healing_speed = WIZARD_HEALING_SPEED;
     defense = WIZARD_DEFENSE;
+    attacking_speed = WIZARD_ATTACKING_SPEED;
 }
 
 void Wizard::draw() {
@@ -332,20 +295,7 @@ void Wizard::draw() {
     // Draw health text
     graphics::Brush br_text;
     br_text.fill_color[0] = 1.0f; br_text.fill_color[1] = 1.0f; br_text.fill_color[2] = 1.0f;
-    graphics::drawText(x - size / 2 + 0.5f, y + size / 2 + 0.1f , 0.2f, std::to_string(health), br_text);
-}
-
-void Wizard::update(float dt) {
-    float dt_seconds = dt / 1000.0f;
-
-    // Wizards don't heal (healing_speed = 0), but handle overheal
-    if (health > max_health) {
-        timer += dt_seconds;
-        if (timer >= 1.0f) {
-            health--;
-            timer -= 1.0f;
-        }
-    }
+    graphics::drawText(x - size / 2 + 0.5f, y + size / 2 + 0.1f, 0.2f, std::to_string(health), br_text);
 }
 
 int Wizard::getUpgradeCost() {
