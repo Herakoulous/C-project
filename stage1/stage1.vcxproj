@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="entity.cpp" />
+    <ClCompile Include="global_state.cpp" />
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hover_menu.cpp" />
     <ClCompile Include="main.cpp" />
@@ -138,6 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="entity.h" />
+    <ClInclude Include="global_state.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="hover_menu.h" />
     <ClInclude Include="troop.h" />

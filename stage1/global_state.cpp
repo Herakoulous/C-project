@@ -1,0 +1,290 @@
+#include "global_state.h"
+#include "sgg/graphics.h"
+#include <algorithm>
+
+// Initialize static instance
+GlobalState* GlobalState::instance = nullptr;
+
+GlobalState::GlobalState() : selected_entity(nullptr) {}
+
+GlobalState* GlobalState::getInstance() {
+    if (!instance) {
+        instance = new GlobalState();
+    }
+    return instance;
+}
+
+GlobalState::~GlobalState() {
+    entities.clear();
+    troops.clear();
+}
+
+void GlobalState::init() {
+    entities.clear();
+    troops.clear();
+    entity_graph.clear();
+    selected_entity = nullptr;
+
+    // Initialize player side
+    entities.push_back(std::make_unique<Wizard>(3.5f, 3.0f, 10, Side::PLAYER));
+    entities.push_back(std::make_unique<Baby>(1.5f, 3.5f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Baby>(3.5f, 1.0f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Baby>(1.5f, 1.5f, 10, Side::NEUTRAL));
+
+    // Initialize neutral towers
+    entities.push_back(std::make_unique<Tower>(8.0f, 4.0f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Tower>(16 - 5.5f, 1.5f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Tower>(5.5f, 8 - 1.4f, 10, Side::NEUTRAL));
+
+    // Initialize enemy side
+    entities.push_back(std::make_unique<Warrior>(16 - 3.5f, 8 - 3.0f, 10, Side::ENEMY));
+    entities.push_back(std::make_unique<Baby>(16 - 1.5f, 8 - 3.5f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Baby>(16 - 3.5f, 8 - 1.0f, 10, Side::NEUTRAL));
+    entities.push_back(std::make_unique<Baby>(16 - 1.5f, 8 - 1.5f, 10, Side::NEUTRAL));
+
+    // Connect all entities in graph
+    for (size_t i = 0; i < entities.size(); i++) {
+        for (size_t j = i + 1; j < entities.size(); j++) {
+            entity_graph.addEdge(entities[i].get(), entities[j].get());
+        }
+    }
+
+    // Calculate all paths in the graph
+    entity_graph.calculatePaths(entities);
+}
+
+void GlobalState::handleTroopArrivals() {
+    for (auto& troop : troops) {
+        if (troop->hasArrived()) {
+            Entity* target = troop->getTarget();
+            Entity* source = troop->getSource();
+            int amount = troop->getHealthAmount();
+
+            if (target->side == source->side) {
+                target->health += amount;
+            }
+            else {
+                int damage = std::max(1, amount - (int)target->defense);
+                target->health -= damage;
+                if (target->health < 0) {
+                    target->side = source->side;
+                    target->health = std::abs(target->health);
+                }
+            }
+        }
+    }
+
+    troops.erase(
+        std::remove_if(troops.begin(), troops.end(),
+            [](const std::unique_ptr<Troop>& t) { return t->hasArrived(); }),
+        troops.end()
+    );
+}
+
+void GlobalState::handleHoverMenu(float canvas_x, float canvas_y) {
+    for (auto& entity : entities) {
+        if (entity->contains(canvas_x, canvas_y)) {
+            Wizard* wizard = dynamic_cast<Wizard*>(entity.get());
+            Tower* tower = dynamic_cast<Tower*>(entity.get());
+            Warrior* warrior = dynamic_cast<Warrior*>(entity.get());
+            Baby* baby = dynamic_cast<Baby*>(entity.get());
+
+            if (wizard && wizard->getLevel() != 3 && wizard->getSide() == Side::PLAYER) {
+                hover_menu.show(entity->x, entity->y + 1.3f, entity.get(), false, wizard->getUpgradeCost());
+            }
+            else if (tower && tower->getLevel() != 5 && tower->getSide() == Side::PLAYER) {
+                hover_menu.show(entity->x, entity->y + 1.0f, entity.get(), false, tower->getUpgradeCost());
+            }
+            else if (warrior && warrior->getLevel() != 5 && warrior->getSide() == Side::PLAYER) {
+                hover_menu.show(entity->x, entity->y + 1.0f, entity.get(), false, warrior->getUpgradeCost());
+            }
+            else if (baby && baby->getSide() == Side::PLAYER) {
+                hover_menu.show(entity->x, entity->y + 1.0f, entity.get(), true, 0);
+            }
+            break;
+        }
+    }
+
+    if (hover_menu.isVisible()) {
+        int hovered = hover_menu.checkClick(canvas_x, canvas_y);
+        if (hovered == -1) {
+            bool over_entity = false;
+            for (auto& entity : entities) {
+                if (entity->contains(canvas_x, canvas_y)) {
+                    over_entity = true;
+                    break;
+                }
+            }
+            if (!over_entity) hover_menu.hide();
+        }
+    }
+}
+
+void GlobalState::handleMenuClick(float canvas_x, float canvas_y, int clicked_option) {
+    Entity* target = hover_menu.getTarget();
+    bool is_baby = hover_menu.getIsBaby();
+
+    if (is_baby) {
+        if (clicked_option == 0 && target->health >= 5) {
+            int hp = target->health - 5;
+            float px = target->x, py = target->y;
+            Side side = target->side;
+            for (size_t i = 0; i < entities.size(); i++) {
+                if (entities[i].get() == target) {
+                    entities[i] = std::make_unique<Warrior>(px, py, hp, side);
+                    break;
+                }
+            }
+            hover_menu.hide();
+        }
+        else if (clicked_option == 1 && target->health >= 10) {
+            int hp = target->health - 10;
+            float px = target->x, py = target->y;
+            Side side = target->side;
+            for (size_t i = 0; i < entities.size(); i++) {
+                if (entities[i].get() == target) {
+                    entities[i] = std::make_unique<Tower>(px, py, hp, side);
+                    break;
+                }
+            }
+            hover_menu.hide();
+        }
+        else if (clicked_option == 2 && target->health >= 10) {
+            int hp = target->health - 10;
+            float px = target->x, py = target->y;
+            Side side = target->side;
+            for (size_t i = 0; i < entities.size(); i++) {
+                if (entities[i].get() == target) {
+                    entities[i] = std::make_unique<Wizard>(px, py, hp, side);
+                    break;
+                }
+            }
+            hover_menu.hide();
+        }
+    }
+    else {
+        Warrior* warrior = dynamic_cast<Warrior*>(target);
+        Tower* tower = dynamic_cast<Tower*>(target);
+        Wizard* wizard = dynamic_cast<Wizard*>(target);
+
+        if (warrior && warrior->canUpgrade()) {
+            warrior->performUpgrade();
+            hover_menu.hide();
+        }
+        else if (tower && tower->canUpgrade()) {
+            tower->performUpgrade();
+            hover_menu.hide();
+        }
+        else if (wizard && wizard->canUpgrade()) {
+            wizard->performUpgrade();
+            hover_menu.hide();
+        }
+        else {
+            hover_menu.hide();
+        }
+    }
+}
+
+void GlobalState::handleEntityClick(float canvas_x, float canvas_y) {
+    bool clicked_entity = false;
+    for (auto& entity : entities) {
+        if (entity->contains(canvas_x, canvas_y)) {
+            if (entity->getSide() == Side::PLAYER) {
+                clicked_entity = true;
+            }
+            if (selected_entity && selected_entity != entity.get()) {
+                int amount = selected_entity->health / 2;
+                if (amount > 0) {
+                    const PathData* path = entity_graph.getPath(selected_entity, entity.get());
+                    if (path && !path->waypoints.empty()) {
+                        troops.push_back(std::make_unique<Troop>(
+                            selected_entity, entity.get(), amount, path->waypoints
+                        ));
+                        selected_entity->health -= amount;
+                    }
+                }
+                selected_entity = nullptr;
+            }
+            else {
+                selected_entity = entity.get();
+            }
+            break;
+        }
+    }
+
+    if (!clicked_entity) {
+        selected_entity = nullptr;
+    }
+}
+
+void GlobalState::handleMouseInput(float canvas_x, float canvas_y, bool mouse_pressed) {
+    if (mouse_pressed) {
+        int clicked_option = hover_menu.checkClick(canvas_x, canvas_y);
+        if (clicked_option != -1) {
+            handleMenuClick(canvas_x, canvas_y, clicked_option);
+        }
+        else {
+            handleEntityClick(canvas_x, canvas_y);
+        }
+    }
+}
+
+void GlobalState::update(float dt) {
+    // Update entities
+    for (auto& entity : entities) {
+        entity->update(dt);
+    }
+
+    // Update troops
+    for (auto& troop : troops) {
+        troop->update(dt);
+    }
+
+    // Handle troop arrivals
+    handleTroopArrivals();
+
+    // Get mouse state
+    graphics::MouseState mouse;
+    graphics::getMouseState(mouse);
+    float canvas_x = graphics::windowToCanvasX((float)mouse.cur_pos_x);
+    float canvas_y = graphics::windowToCanvasY((float)mouse.cur_pos_y);
+
+    // Handle hover menu display
+    handleHoverMenu(canvas_x, canvas_y);
+
+    // Handle mouse input
+    handleMouseInput(canvas_x, canvas_y, mouse.button_left_pressed);
+}
+
+void GlobalState::draw() {
+    // Draw background
+    graphics::Brush bg;
+    bg.fill_color[0] = 0.0f; bg.fill_color[1] = 1.0f; bg.fill_color[2] = 0.0f;
+    graphics::drawRect(8.0f, 4.0f, 16.0f, 8.0f, bg);
+
+    // Draw graph connections
+    entity_graph.draw();
+
+    // Draw entities
+    for (auto& entity : entities) {
+        entity->draw();
+    }
+
+    // Draw selection highlight
+    if (selected_entity) {
+        graphics::Brush hl;
+        hl.fill_color[0] = hl.fill_color[1] = 1.0f; hl.fill_color[2] = 0.0f;
+        hl.fill_opacity = 0.0f;
+        hl.outline_opacity = 1.0f;
+        hl.outline_width = 3.0f;
+        graphics::drawDisk(selected_entity->x, selected_entity->y, selected_entity->size + 0.1f, hl);
+    }
+
+    // Draw troops
+    for (auto& troop : troops) {
+        troop->draw();
+    }
+
+    // Draw hover menu
+    hover_menu.draw();
+}
