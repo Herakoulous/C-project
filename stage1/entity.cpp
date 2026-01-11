@@ -1,21 +1,42 @@
 #include "entity.h"
+#include "sgg/graphics.h"
 #include <string>
 
-// Entity
+// Static constants initialization
+const float Baby::BABY_SIZE = 0.4f;
+const int Baby::BABY_MAX_HEALTH = 10;
+const float Baby::BABY_HEALING_SPEED = 0.3f;
+const int Baby::BABY_ATTACKING_SPEED = 50;
+
+const float Warrior::WARRIOR_SIZE = 0.5f;
+const int Warrior::WARRIOR_MAX_HEALTH = 10;
+const float Warrior::WARRIOR_HEALING_SPEED = 0.4f;
+const int Warrior::WARRIOR_ATTACKING_SPEED = 50;
+
+const float Tower::TOWER_SIZE = 1.0f;
+const int Tower::TOWER_MAX_HEALTH = 20;
+const float Tower::TOWER_HEALING_SPEED = 0.0f;
+const float Tower::TOWER_DEFENSE = 2.0f;
+const int Tower::TOWER_ATTACKING_SPEED = 30;
+
+const float Wizard::WIZARD_SIZE = 1.2f;
+const int Wizard::WIZARD_MAX_HEALTH = 50;
+const float Wizard::WIZARD_HEALING_SPEED = 0.0f;
+const float Wizard::WIZARD_DEFENSE = 1.0f;
+const int Wizard::WIZARD_ATTACKING_SPEED = 75;
+
+// Entity implementation
 Entity::Entity(float x, float y, int health, Side side)
-    : x(x), y(y), size(0.0f), health(health), side(side),
-    timer(1.0f), selected(false), max_health(0), level(0), healing_speed(0.0f), defense(0), attacking_speed(0) {
+    : Node(x, y), health(health), side(side), timer(1.0f),
+    size(0.0f), selected(false), max_health(0), level(0),
+    healing_speed(0.0f), defense(0.0f), attacking_speed(0) {
 }
 
-bool Entity::contains(float mx, float my) {
+bool Entity::contains(float mx, float my) const {
     float dx = mx - x;
     float dy = my - y;
     return (dx * dx + dy * dy) <= (size * size);
 }
-
-void Entity::onClick() {}
-
-void Entity::draw() {}
 
 void Entity::update(float dt) {
     float dt_seconds = dt / 1000.0f;
@@ -38,6 +59,7 @@ void Entity::update(float dt) {
             }
         }
     }
+
     if (health > max_health) {
         timer += dt_seconds;
         if (timer >= 1.0f) {
@@ -47,6 +69,8 @@ void Entity::update(float dt) {
     }
 }
 
+void Entity::draw() {}
+
 // Baby
 Baby::Baby(float x, float y, int health, Side side)
     : Entity(x, y, health, side) {
@@ -55,7 +79,7 @@ Baby::Baby(float x, float y, int health, Side side)
     healing_speed = BABY_HEALING_SPEED;
     attacking_speed = BABY_ATTACKING_SPEED;
     level = 0;
-    defense = 1;
+    defense = 1.0f;
 }
 
 void Baby::draw() {
@@ -76,7 +100,6 @@ void Baby::draw() {
     graphics::drawText(x - size / 2, y + size / 2, size / 2, std::to_string(health), br_text);
 }
 
-// Warrior
 Warrior::Warrior(float x, float y, int health, Side side)
     : Entity(x, y, health, side) {
     size = WARRIOR_SIZE;
@@ -117,7 +140,7 @@ bool Warrior::canUpgrade() const {
     }
 }
 
-int Warrior::getUpgradeCost() {
+int Warrior::getUpgradeCost() const {
     if (level >= 5) return 0;
 
     switch (level) {
@@ -199,7 +222,7 @@ void Tower::draw() {
     graphics::drawText(x - size / 4, y + size / 4, size / 4, std::to_string(health), br_text);
 }
 
-int Tower::getUpgradeCost() {
+int Tower::getUpgradeCost() const {
     if (level >= 5) return 0;
 
     switch (level) {
@@ -298,7 +321,7 @@ void Wizard::draw() {
     graphics::drawText(x - size / 2 + 0.5f, y + size / 2 + 0.1f, 0.2f, std::to_string(health), br_text);
 }
 
-int Wizard::getUpgradeCost() {
+int Wizard::getUpgradeCost() const {
     if (level >= 3) return 0;
 
     switch (level) {
@@ -326,7 +349,7 @@ void Wizard::performUpgrade() {
         if (health >= 15) {
             health -= 15;
             max_health += 50;
-            healing_speed += 35;
+            attacking_speed += 35;
             level = 2;
         }
         break;
@@ -334,7 +357,7 @@ void Wizard::performUpgrade() {
         if (health >= 20) {
             health -= 20;
             max_health += 50;
-            defense += 40;
+            attacking_speed += 40;
             level = 3;
         }
         break;

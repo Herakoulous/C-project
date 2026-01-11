@@ -29,6 +29,9 @@
     <ClCompile Include="global_state.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="entity.h">
@@ -44,6 +47,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="global_state.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="node.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>

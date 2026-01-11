@@ -135,6 +135,7 @@
     <ClCompile Include="graph.cpp" />
     <ClCompile Include="hover_menu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="node.cpp" />
     <ClCompile Include="troop.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +143,7 @@
     <ClInclude Include="global_state.h" />
     <ClInclude Include="graph.h" />
     <ClInclude Include="hover_menu.h" />
+    <ClInclude Include="node.h" />
     <ClInclude Include="troop.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

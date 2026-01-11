@@ -1,16 +1,15 @@
 #pragma once
+#include "node.h"
 #include "entity.h"
-#include "sgg/graphics.h"
 #include <vector>
 
-class Troop {
+class Troop : public Node {
 private:
     Entity* source;
     Entity* target;
     int health_amount;
     std::vector<std::pair<float, float>> waypoints;
-    float progress; // 0.0 to waypoints.size()-1
-    float x, y;
+    float progress;
     float speed;
     bool arrived;
 
@@ -18,8 +17,11 @@ private:
 
 public:
     Troop(Entity* src, Entity* tgt, int amount, const std::vector<std::pair<float, float>>& path);
-    void update(float dt);
-    void draw();
+
+    void update(float dt) override;
+    void draw() override;
+    bool contains(float mx, float my) const override;
+
     bool hasArrived() const { return arrived; }
     Entity* getTarget() const { return target; }
     Entity* getSource() const { return source; }

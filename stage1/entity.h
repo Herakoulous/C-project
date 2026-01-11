@@ -1,12 +1,11 @@
 #pragma once
-#include "sgg/graphics.h"
+#include "node.h"
 #include <string>
 
 enum class Side { PLAYER, ENEMY, NEUTRAL };
 
-class Entity {
-public:
-    float x, y;
+class Entity : public Node {
+protected:
     int health;
     Side side;
     float timer;
@@ -18,72 +17,104 @@ public:
     float defense;
     int level;
 
+public:
     Entity(float x, float y, int health, Side side);
 
-    virtual bool contains(float mx, float my);
-    virtual void onClick();
-    virtual void draw();
-    virtual void update(float dt);
-    virtual ~Entity() = default;
-    int getLevel() const { return level; }
+    void update(float dt) override;
+    void draw() override;
+    bool contains(float mx, float my) const override;
+
+    // VIRTUAL FUNCTIONS for polimorphism 
+    virtual void onClick() {}
+    virtual bool canUpgrade() const { return false; }
+    virtual void performUpgrade() {}
+    virtual int getUpgradeCost() const { return 0; }
+    virtual std::string getType() const = 0;  // Pure virtual
+
+    // Getters
+    int getHealth() const { return health; }
     Side getSide() const { return side; }
+    float getSize() const { return size; }
+    int getLevel() const { return level; }
+    int getMaxHealth() const { return max_health; }
+    float getHealingSpeed() const { return healing_speed; }
+    int getAttackingSpeed() const { return attacking_speed; }
+    float getDefense() const { return defense; }
+    bool isSelected() const { return selected; }
+
+    // Setters
+    void setHealth(int h) { health = h; }
+    void setSide(Side s) { side = s; }
+    void setSelected(bool s) { selected = s; }
+
+    virtual ~Entity() = default;
 };
 
 class Baby : public Entity {
 private:
-    const float BABY_SIZE = 0.4f;
-    const int BABY_MAX_HEALTH = 10;
-    const float BABY_HEALING_SPEED = 0.3f;
-    const int BABY_ATTACKING_SPEED = 50;
+    static const float BABY_SIZE;
+    static const int BABY_MAX_HEALTH;
+    static const float BABY_HEALING_SPEED;
+    static const int BABY_ATTACKING_SPEED;
 
 public:
     Baby(float x, float y, int health, Side side);
     void draw() override;
+    std::string getType() const override { return "Baby"; }
 };
 
 class Warrior : public Entity {
 private:
-    const float WARRIOR_SIZE = 0.5f;
-    const int WARRIOR_MAX_HEALTH = 10;
-    const float WARRIOR_HEALING_SPEED = 0.4f;
-    const int WARRIOR_ATTACKING_SPEED = 50;
+    static const float WARRIOR_SIZE;
+    static const int WARRIOR_MAX_HEALTH;
+    static const float WARRIOR_HEALING_SPEED;
+    static const int WARRIOR_ATTACKING_SPEED;
 
 public:
     Warrior(float x, float y, int health, Side side);
     void draw() override;
-    bool canUpgrade() const;
-    void performUpgrade();
-    int getUpgradeCost();
+    std::string getType() const override { return "Warrior"; }
+
+    // Override virtual functions
+    bool canUpgrade() const override;
+    void performUpgrade() override;
+    int getUpgradeCost() const override;
 };
 
 class Tower : public Entity {
 private:
-    const float TOWER_SIZE = 1.0f;
-    const int TOWER_MAX_HEALTH = 20;
-    const float TOWER_HEALING_SPEED = 0.0f;
-    const float TOWER_DEFENSE = 2.0f;
-    const int TOWER_ATTACKING_SPEED = 30;
+    static const float TOWER_SIZE;
+    static const int TOWER_MAX_HEALTH;
+    static const float TOWER_HEALING_SPEED;
+    static const float TOWER_DEFENSE;
+    static const int TOWER_ATTACKING_SPEED;
 
 public:
     Tower(float x, float y, int health, Side side);
     void draw() override;
-    bool canUpgrade() const;
-    void performUpgrade();
-    int getUpgradeCost();
+    std::string getType() const override { return "Tower"; }
+
+    // Override virtual functions
+    bool canUpgrade() const override;
+    void performUpgrade() override;
+    int getUpgradeCost() const override;
 };
 
 class Wizard : public Entity {
 private:
-    const float WIZARD_SIZE = 1.2f;
-    const int WIZARD_MAX_HEALTH = 50;
-    const float WIZARD_HEALING_SPEED = 0.0f;
-    const float WIZARD_DEFENSE = 1.0f;
-    const int WIZARD_ATTACKING_SPEED = 75;
+    static const float WIZARD_SIZE;
+    static const int WIZARD_MAX_HEALTH;
+    static const float WIZARD_HEALING_SPEED;
+    static const float WIZARD_DEFENSE;
+    static const int WIZARD_ATTACKING_SPEED;
 
 public:
     Wizard(float x, float y, int health, Side side);
     void draw() override;
-    bool canUpgrade() const;
-    void performUpgrade();
-    int getUpgradeCost();
+    std::string getType() const override { return "Wizard"; }
+
+    // Override virtual functions
+    bool canUpgrade() const override;
+    void performUpgrade() override;
+    int getUpgradeCost() const override;
 };

@@ -1,31 +1,35 @@
 #include "troop.h"
 #include <cmath>
 #include <algorithm>
+#include "sgg/graphics.h"
 
 Troop::Troop(Entity* src, Entity* tgt, int amount, const std::vector<std::pair<float, float>>& path)
-    : source(src), target(tgt), health_amount(amount), waypoints(path),
-    progress(0.0f), arrived(false) {
-    speed = src->attacking_speed * 0.5f;
+    : Node(path.empty() ? 0.0f : path[0].first,
+        path.empty() ? 0.0f : path[0].second),
+    source(src), target(tgt), health_amount(amount),
+    waypoints(path), progress(0.0f), arrived(false) {
+
+    speed = src->getAttackingSpeed() * 0.5f;
 
     if (waypoints.empty()) {
         arrived = true;
     }
-    else {
-        x = waypoints[0].first;
-        y = waypoints[0].second;
-    }
+}
+
+bool Troop::contains(float mx, float my) const {
+    float dx = mx - x;
+    float dy = my - y;
+    return (dx * dx + dy * dy) <= (0.2f * 0.2f);  // radius 0.2
 }
 
 std::pair<float, float> Troop::interpolatePosition(float t) {
     if (waypoints.size() < 2) return waypoints[0];
 
-    // Clamp t to valid range
     t = std::max(0.0f, std::min(t, (float)(waypoints.size() - 1)));
 
     int segment = (int)t;
     float local_t = t - segment;
 
-    // Get 4 control points for Catmull-Rom spline
     int p0_idx = std::max(0, segment - 1);
     int p1_idx = segment;
     int p2_idx = std::min(segment + 1, (int)waypoints.size() - 1);
@@ -81,10 +85,10 @@ void Troop::draw() {
     if (arrived) return;
 
     graphics::Brush br;
-    if (source->side == Side::PLAYER) {
+    if (source->getSide() == Side::PLAYER) {
         br.fill_color[0] = 0.3f; br.fill_color[1] = 0.3f; br.fill_color[2] = 1.0f;
     }
-    else if (source->side == Side::ENEMY) {
+    else if (source->getSide() == Side::ENEMY) {
         br.fill_color[0] = 1.0f; br.fill_color[1] = 0.3f; br.fill_color[2] = 0.3f;
     }
     else {
