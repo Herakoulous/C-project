@@ -1,0 +1,40 @@
+# ===============================
+# Visual Studio 2022 - C++ ignore
+# ===============================
+
+# Visual Studio cache
+.vs/
+
+# Build output
+Debug/
+Release/
+bin/
+x64/
+x86/
+ARM/
+ARM64/
+
+# Intermediate files
+*.obj
+*.pch
+*.pdb
+*.ilk
+*.ipch
+*.tlog
+*.idb
+*.iobj
+*.ipdb
+
+# Executables & libraries
+*.exe
+*.dll
+*.lib
+*.exp
+
+# Logs & temp files
+*.log
+*.tmp
+
+# OS junk
+.DS_Store
+Thumbs.db
