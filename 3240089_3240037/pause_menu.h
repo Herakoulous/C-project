@@ -15,6 +15,7 @@ private:
     bool resume_clicked;
     bool restart_clicked;
     bool next_level_clicked;
+    bool next_level_available;
 
     // Pause button position and size
     float pause_button_x, pause_button_y;
@@ -47,6 +48,7 @@ public:
     void draw() const;
 
     // Getters
+    void setNextLevelAvailable(bool available);
     bool isGamePaused() const { return game_paused; }
     bool isResumeClicked() { bool val = resume_clicked; resume_clicked = false; return val; }
     bool isRestartClicked() { bool val = restart_clicked; restart_clicked = false; return val; }

@@ -4,7 +4,7 @@
 #include "hover_menu.h"
 #include "troop.h"
 #include "graph.h"
-#include "pause_menu.h"
+#include "pause_menu.h"  // Αυτό υπάρχει ήδη
 #include "level_manager.h"  // ΠΡΟΣΘΗΚΗ
 #include <vector>
 #include <memory>
@@ -24,7 +24,7 @@ private:
     Entity* selected_entity;
     HoverMenu hover_menu;
     AISystem* ai_system;
-    PauseMenu pause_menu;
+    PauseMenu pause_menu;  // Αυτό υπάρχει ήδη
     LevelManager level_manager;  // ΠΡΟΣΘΗΚΗ
 
     struct ReadySpell {
@@ -68,7 +68,7 @@ public:
     EntityGraph& getGraph() { return entity_graph; }
     Entity* getSelectedEntity() const { return selected_entity; }
     HoverMenu& getHoverMenu() { return hover_menu; }
-    PauseMenu& getPauseMenu() { return pause_menu; }
+    PauseMenu& getPauseMenu() { return pause_menu; }  // Αυτό υπάρχει ήδη
     LevelManager& getLevelManager() { return level_manager; }  // ΠΡΟΣΘΗΚΗ
     std::pair<int, int> calculateTotalHealth() const;
     void drawHealthBars();

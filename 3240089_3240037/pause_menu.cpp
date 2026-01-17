@@ -2,14 +2,6 @@
 #include "sgg/graphics.h"
 #include <cmath>
 
-// Constants
-const float PAUSE_BUTTON_SIZE = 0.5f;
-const float PAUSE_MENU_WIDTH = 3.0f;
-const float PAUSE_MENU_HEIGHT = 2.5f;
-const float BUTTON_WIDTH = 2.0f;
-const float BUTTON_HEIGHT = 0.5f;
-const float BUTTON_GAP = 0.1f;
-
 PauseMenu::PauseMenu() :
     game_paused(false),
     pause_button_hovered(false),
@@ -18,53 +10,111 @@ PauseMenu::PauseMenu() :
     next_level_hovered(false),
     resume_clicked(false),
     restart_clicked(false),
-    next_level_clicked(false) {
-    init();
-}
+    next_level_clicked(false),
+    next_level_available(true) {
 
-void PauseMenu::init() {
-    // Pause button position (top right)
+    // ΣΤΑΘΕΡΕΣ ΘΕΣΕΙΣ
     pause_button_x = 15.5f;
     pause_button_y = 0.5f;
-    pause_button_width = PAUSE_BUTTON_SIZE;
-    pause_button_height = PAUSE_BUTTON_SIZE;
+    pause_button_width = 0.5f;
+    pause_button_height = 0.5f;
 
-    // Pause menu position (center)
-    pause_menu_x = 8.0f;
-    pause_menu_y = 4.0f;
-    pause_menu_width = PAUSE_MENU_WIDTH;
-    pause_menu_height = PAUSE_MENU_HEIGHT;
+    resume_button_x = 8.0f;
+    resume_button_y = 3.0f;
 
-    // Initialize button positions
-    updateButtonPositions(false);
+    next_level_button_x = 8.0f;
+    next_level_button_y = 4.0f;
+
+    restart_button_x = 8.0f;
+    restart_button_y = 5.0f;
+
+    button_width = 2.0f;
+    button_height = 0.5f;
 }
 
 void PauseMenu::updateButtonPositions(bool has_next_level) {
-    // Calculate total height of all buttons
-    int button_count = 2; // Resume and Restart are always shown
-    if (has_next_level) button_count++;
+    next_level_available = has_next_level;
+}
 
-    float total_height = button_count * BUTTON_HEIGHT + (button_count - 1) * BUTTON_GAP;
-    float start_y = pause_menu_y - total_height / 2 + BUTTON_HEIGHT / 2;
+void PauseMenu::draw() const {
+    graphics::Brush br;
 
-    // Resume button (top button)
-    resume_button_x = pause_menu_x;
-    resume_button_y = start_y;
-
-    // Next Level button (middle if exists)
-    if (has_next_level) {
-        next_level_button_x = pause_menu_x;
-        next_level_button_y = start_y + BUTTON_HEIGHT + BUTTON_GAP;
-        start_y += BUTTON_HEIGHT + BUTTON_GAP;
+    // 1. Pause button (πάντα ορατό)
+    if (pause_button_hovered) {
+        br.fill_color[0] = 0.8f; br.fill_color[1] = 0.8f; br.fill_color[2] = 0.8f;
+    }
+    else {
+        br.fill_color[0] = 1.0f; br.fill_color[1] = 1.0f; br.fill_color[2] = 1.0f;
     }
 
-    // Restart button (bottom button)
-    restart_button_x = pause_menu_x;
-    restart_button_y = start_y + BUTTON_HEIGHT + BUTTON_GAP;
+    // Σταθερό pause icon
+    float bar_width = 0.08f;
+    float bar_height = 0.3f;
+    graphics::drawRect(15.45f, 0.5f, bar_width, bar_height, br);
+    graphics::drawRect(15.55f, 0.5f, bar_width, bar_height, br);
 
-    button_width = BUTTON_WIDTH;
-    button_height = BUTTON_HEIGHT;
+    // Background για το pause button
+    br.fill_color[0] = 0.2f; br.fill_color[1] = 0.2f; br.fill_color[2] = 0.2f;
+    br.fill_opacity = 0.7f;
+    graphics::drawRect(pause_button_x, pause_button_y, pause_button_width, pause_button_height, br);
+
+    // 2. Αν είναι paused, σχεδίασε μενού
+    if (game_paused) {
+        // Μαύρο overlay
+        br.fill_color[0] = 0.0f; br.fill_color[1] = 0.0f; br.fill_color[2] = 0.0f;
+        br.fill_opacity = 0.5f;
+        graphics::drawRect(8.0f, 4.0f, 16.0f, 8.0f, br);
+
+        // Menu background
+        br.fill_color[0] = 0.1f; br.fill_color[1] = 0.1f; br.fill_color[2] = 0.2f;
+        br.fill_opacity = 1.0f;
+        br.outline_color[0] = 1.0f; br.outline_color[1] = 1.0f; br.outline_color[2] = 1.0f;
+        br.outline_opacity = 1.0f;
+        br.outline_width = 2.0f;
+        graphics::drawRect(8.0f, 4.0f, 3.0f, 4.0f, br);
+
+        // "PAUSED" text
+        graphics::Brush text_br;
+        text_br.fill_color[0] = 1.0f; text_br.fill_color[1] = 1.0f; text_br.fill_color[2] = 1.0f;
+        graphics::drawText(7.5f, 2.4f, 0.3f, "PAUSED", text_br);
+
+        // RESUME button
+        if (resume_button_hovered) {
+            br.fill_color[0] = 0.3f; br.fill_color[1] = 0.3f; br.fill_color[2] = 0.8f;
+        }
+        else {
+            br.fill_color[0] = 0.2f; br.fill_color[1] = 0.2f; br.fill_color[2] = 0.6f;
+        }
+        br.fill_opacity = 1.0f;
+        br.outline_opacity = 1.0f;
+        graphics::drawRect(resume_button_x, resume_button_y, button_width, button_height, br);
+        graphics::drawText(resume_button_x - 0.3f, resume_button_y + 0.05f, 0.2f, "RESUME", text_br);
+
+        // NEXT LEVEL button (μόνο αν υπάρχει)
+        if (next_level_available) {
+            if (next_level_hovered) {
+                br.fill_color[0] = 0.3f; br.fill_color[1] = 0.8f; br.fill_color[2] = 0.3f;
+            }
+            else {
+                br.fill_color[0] = 0.2f; br.fill_color[1] = 0.6f; br.fill_color[2] = 0.2f;
+            }
+            graphics::drawRect(next_level_button_x, next_level_button_y, button_width, button_height, br);
+            graphics::drawText(next_level_button_x - 0.45f, next_level_button_y + 0.05f, 0.2f, "NEXT LEVEL", text_br);
+        }
+
+        // RESTART button
+        if (restart_button_hovered) {
+            br.fill_color[0] = 0.8f; br.fill_color[1] = 0.3f; br.fill_color[2] = 0.3f;
+        }
+        else {
+            br.fill_color[0] = 0.6f; br.fill_color[1] = 0.2f; br.fill_color[2] = 0.2f;
+        }
+        graphics::drawRect(restart_button_x, restart_button_y, button_width, button_height, br);
+        graphics::drawText(restart_button_x - 0.35f, restart_button_y + 0.05f, 0.2f, "RESTART", text_br);
+    }
 }
+
+// ΕΝΤΟΠΙΣΜΕΝΕΣ ΣΥΝΑΡΤΗΣΕΙΣ
 
 void PauseMenu::update(float canvas_x, float canvas_y, bool mouse_pressed) {
     // Reset click flags
@@ -126,156 +176,6 @@ void PauseMenu::update(float canvas_x, float canvas_y, bool mouse_pressed) {
     }
 }
 
-void PauseMenu::draw() const {
-    graphics::Brush br;
-
-    // 1. Draw pause button (always visible)
-    if (pause_button_hovered) {
-        br.fill_color[0] = 0.8f;
-        br.fill_color[1] = 0.8f;
-        br.fill_color[2] = 0.8f;
-    }
-    else {
-        br.fill_color[0] = 1.0f;
-        br.fill_color[1] = 1.0f;
-        br.fill_color[2] = 1.0f;
-    }
-
-    // Draw pause icon (two vertical bars)
-    float bar_width = 0.08f;
-    float bar_height = 0.3f;
-    float gap = 0.05f;
-
-    // Left bar
-    graphics::drawRect(pause_button_x - gap / 2 - bar_width / 2, pause_button_y,
-        bar_width, bar_height, br);
-    // Right bar
-    graphics::drawRect(pause_button_x + gap / 2 + bar_width / 2, pause_button_y,
-        bar_width, bar_height, br);
-
-    // Draw button background (optional, for better visibility)
-    br.fill_color[0] = 0.2f;
-    br.fill_color[1] = 0.2f;
-    br.fill_color[2] = 0.2f;
-    br.fill_opacity = 0.7f;
-    graphics::drawRect(pause_button_x, pause_button_y,
-        pause_button_width, pause_button_height, br);
-
-    // Pulsing effect when game is running
-    if (!game_paused) {
-        static float pulse = 0.0f;
-        pulse += 0.05f;
-
-        br.fill_color[0] = 1.0f;
-        br.fill_color[1] = 1.0f;
-        br.fill_color[2] = 1.0f;
-        br.fill_opacity = 0.3f + 0.2f * sinf(pulse);
-        graphics::drawDisk(pause_button_x, pause_button_y,
-            pause_button_width / 2, br);
-    }
-
-    // 2. If game is paused, draw the pause menu overlay
-    if (game_paused) {
-        // Draw semi-transparent overlay
-        br.fill_color[0] = 0.0f;
-        br.fill_color[1] = 0.0f;
-        br.fill_color[2] = 0.0f;
-        br.fill_opacity = 0.5f;
-        graphics::drawRect(8.0f, 4.0f, 16.0f, 8.0f, br);
-
-        // Draw pause menu background
-        br.fill_color[0] = 0.1f;
-        br.fill_color[1] = 0.1f;
-        br.fill_color[2] = 0.2f;
-        br.fill_opacity = 0.9f;
-        br.outline_color[0] = 1.0f;
-        br.outline_color[1] = 1.0f;
-        br.outline_color[2] = 1.0f;
-        br.outline_opacity = 1.0f;
-        br.outline_width = 2.0f;
-
-        graphics::drawRect(pause_menu_x, pause_menu_y,
-            pause_menu_width, pause_menu_height, br);
-
-        // Draw "PAUSED" text
-        graphics::Brush text_br;
-        text_br.fill_color[0] = 1.0f;
-        text_br.fill_color[1] = 1.0f;
-        text_br.fill_color[2] = 1.0f;
-        graphics::drawText(pause_menu_x - 0.5f, pause_menu_y - 1.2f,
-            0.3f, "PAUSED", text_br);
-
-        // Draw resume button
-        if (resume_button_hovered) {
-            br.fill_color[0] = 0.3f;
-            br.fill_color[1] = 0.3f;
-            br.fill_color[2] = 0.8f;
-        }
-        else {
-            br.fill_color[0] = 0.2f;
-            br.fill_color[1] = 0.2f;
-            br.fill_color[2] = 0.6f;
-        }
-        br.fill_opacity = 1.0f;
-        br.outline_opacity = 1.0f;
-
-        graphics::drawRect(resume_button_x, resume_button_y,
-            button_width, button_height, br);
-
-        text_br.fill_color[0] = 1.0f;
-        text_br.fill_color[1] = 1.0f;
-        text_br.fill_color[2] = 1.0f;
-        graphics::drawText(resume_button_x - 0.3f, resume_button_y + 0.05f,
-            0.2f, "RESUME", text_br);
-
-        // Draw next level button (if applicable)
-        // TODO: Implement logic to check if next level exists
-        // For now, always show it
-        if (true) { // Replace with actual condition
-            if (next_level_hovered) {
-                br.fill_color[0] = 0.3f;
-                br.fill_color[1] = 0.8f;
-                br.fill_color[2] = 0.3f;
-            }
-            else {
-                br.fill_color[0] = 0.2f;
-                br.fill_color[1] = 0.6f;
-                br.fill_color[2] = 0.2f;
-            }
-
-            graphics::drawRect(next_level_button_x, next_level_button_y,
-                button_width, button_height, br);
-
-            text_br.fill_color[0] = 1.0f;
-            text_br.fill_color[1] = 1.0f;
-            text_br.fill_color[2] = 1.0f;
-            graphics::drawText(next_level_button_x - 0.45f, next_level_button_y + 0.05f,
-                0.2f, "NEXT LEVEL", text_br);
-        }
-
-        // Draw restart button
-        if (restart_button_hovered) {
-            br.fill_color[0] = 0.8f;
-            br.fill_color[1] = 0.3f;
-            br.fill_color[2] = 0.3f;
-        }
-        else {
-            br.fill_color[0] = 0.6f;
-            br.fill_color[1] = 0.2f;
-            br.fill_color[2] = 0.2f;
-        }
-
-        graphics::drawRect(restart_button_x, restart_button_y,
-            button_width, button_height, br);
-
-        text_br.fill_color[0] = 1.0f;
-        text_br.fill_color[1] = 1.0f;
-        text_br.fill_color[2] = 1.0f;
-        graphics::drawText(restart_button_x - 0.35f, restart_button_y + 0.05f,
-            0.2f, "RESTART", text_br);
-    }
-}
-
 void PauseMenu::pauseGame() {
     game_paused = true;
 }
@@ -307,4 +207,8 @@ bool PauseMenu::isMouseOverNextLevelButton(float mx, float my) const {
         mx <= next_level_button_x + button_width / 2 &&
         my >= next_level_button_y - button_height / 2 &&
         my <= next_level_button_y + button_height / 2);
+}
+
+void PauseMenu::setNextLevelAvailable(bool available) {
+    next_level_available = available;
 }

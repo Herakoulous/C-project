@@ -51,7 +51,7 @@ void GlobalState::initLevel(int level) {
     }
 
     // Update pause menu button positions
-    pause_menu.updateButtonPositions(level_manager.hasNextLevel());
+    pause_menu.setNextLevelAvailable(level_manager.hasNextLevel());
 }
 
 void GlobalState::update(float dt) {
@@ -105,6 +105,7 @@ void GlobalState::update(float dt) {
 }
 
 void GlobalState::draw() {
+
     graphics::Brush bg;
     bg.fill_color[0] = 0.3f;
     bg.fill_color[1] = 0.6f;
@@ -150,7 +151,6 @@ void GlobalState::draw() {
     // Draw pause menu (draws pause button always, and menu if paused)
     pause_menu.draw();
 }
-
 // Add destructor
 GlobalState::~GlobalState() {
     if (ai_system) {
