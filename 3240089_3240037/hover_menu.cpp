@@ -38,8 +38,31 @@ void HoverMenu::show(float menu_x, float menu_y, Entity* entity, bool baby, int 
             buttons.push_back({ x + 0.5f, y - 1.3f, 0.4f, 0.4f, 11 }); // Sickness
         }
     }
-    else {
-        buttons.push_back({ x, y - 1.5f, 0.4f, 0.4f, 0 });
+    else if (entity->getType() == "Warrior") {
+        Warrior* warrior = static_cast<Warrior*>(entity);
+        int level = warrior->getLevel();
+
+        // Only show upgrade button if level is less than 5 (max level)
+        if (level < 5) {
+            buttons.push_back({ x, y - 1.5f, 0.4f, 0.4f, 0 });
+        }
+        else {
+            // Level 5 - hide the menu
+            visible = false;
+        }
+    }
+    else if (entity->getType() == "Tower") {
+        Tower* tower = static_cast<Tower*>(entity);
+        int level = tower->getLevel();
+
+        // Only show upgrade button if level is less than 5 (max level)
+        if (level < 5) {
+            buttons.push_back({ x, y - 1.5f, 0.4f, 0.4f, 0 });
+        }
+        else {
+            // Level 5 - hide the menu
+            visible = false;
+        }
     }
 }
 
@@ -301,11 +324,11 @@ void HoverMenu::draw() {
 
                 br_text.fill_color[0] = 1.0f; br_text.fill_color[1] = 1.0f; br_text.fill_color[2] = 1.0f;
                 if (wizard->canCastSpell(1)) {
-                    graphics::drawText(x + 0.47f, y + 1.1f - 1.17f, 0.12f, "30", br_text);
+                    graphics::drawText(x + 0.47f, y - 0.1f, 0.12f, "30", br_text);
                 }
                 else {
                     br_text.fill_color[0] = 1.0f; br_text.fill_color[1] = 0.3f; br_text.fill_color[2] = 0.3f;
-                    graphics::drawText(x + 0.47f, y + 1.1f - 1.17f, 0.12f, "30", br_text);
+                    graphics::drawText(x + 0.47f, y  - 0.1f, 0.12f, "30", br_text);
                 }
             }
         }

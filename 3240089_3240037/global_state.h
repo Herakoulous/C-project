@@ -7,6 +7,9 @@
 #include <vector>
 #include <memory>
 
+// Forward declaration
+class AISystem;
+
 class GlobalState {
 private:
     static GlobalState* instance;
@@ -18,13 +21,18 @@ private:
     EntityGraph entity_graph;
     Entity* selected_entity;
     HoverMenu hover_menu;
+    AISystem* ai_system;  // Changed to pointer
 
-    // Wizard spell casting
-    Wizard* casting_wizard;
-    int pending_spell_id;
-    float casting_timer;
-    float casting_duration;
-    bool is_casting;
+    struct ReadySpell {
+        Wizard* wizard;
+        int spell_id;
+        bool is_ready;
+        float prep_time;
+    };
+
+    std::vector<ReadySpell> ready_spells;
+    Wizard* target_selection_wizard;
+    int target_selection_spell_id;
 
     void handleTroopArrivals();
     void handleMouseInput(float canvas_x, float canvas_y, bool mouse_pressed);
@@ -35,8 +43,8 @@ private:
     void updateAttackEffects(float dt);
     void drawAttackEffects();
     void handleWizardSpellCast(float canvas_x, float canvas_y);
-    void updateCasting(float dt);
-    void drawCastingBar();
+    void drawReadySpells();
+    void updateReadySpells(float dt);
 
 public:
     GlobalState();
@@ -55,6 +63,8 @@ public:
     EntityGraph& getGraph() { return entity_graph; }
     Entity* getSelectedEntity() const { return selected_entity; }
     HoverMenu& getHoverMenu() { return hover_menu; }
+    std::pair<int, int> calculateTotalHealth() const;
+    void drawHealthBars();
 
     void setSelectedEntity(Entity* entity) { selected_entity = entity; }
 

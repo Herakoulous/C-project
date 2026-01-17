@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3240089_3240037\ai_system.cpp" />
     <ClCompile Include="3240089_3240037\entity.cpp" />
     <ClCompile Include="3240089_3240037\global_state.cpp" />
     <ClCompile Include="3240089_3240037\graph.cpp" />
@@ -144,6 +145,7 @@
     <ClCompile Include="3240089_3240037\troop.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3240089_3240037\ai_system.h" />
     <ClInclude Include="3240089_3240037\entity.h" />
     <ClInclude Include="3240089_3240037\global_state.h" />
     <ClInclude Include="3240089_3240037\graph.h" />

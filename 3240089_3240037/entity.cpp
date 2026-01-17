@@ -11,8 +11,8 @@ const float Baby::BABY_HEALING_SPEED = 0.3f;
 const int Baby::BABY_ATTACKING_SPEED = 50;
 
 const float Warrior::WARRIOR_SIZE = 0.5f;
-const int Warrior::WARRIOR_MAX_HEALTH = 10;
-const float Warrior::WARRIOR_HEALING_SPEED = 0.4f;
+const int Warrior::WARRIOR_MAX_HEALTH = 100;
+const float Warrior::WARRIOR_HEALING_SPEED = 10.0f;
 const int Warrior::WARRIOR_ATTACKING_SPEED = 50;
 
 const float Tower::TOWER_SIZE = 1.0f;
@@ -453,8 +453,12 @@ void Wizard::draw() {
     graphics::drawSector(x, y - 0.15f, 0, size, 240, 300, br);
     // Cover bottom to make triangle
     graphics::Brush br_cover;
-    br_cover.fill_color[0] = 0.0f; br_cover.fill_color[1] = 1.0f; br_cover.fill_color[2] = 0.0f;
-    br_cover.outline_color[0] = 0.0f; br_cover.outline_color[1] = 1.0f; br_cover.outline_color[2] = 0.0f;
+    br_cover.fill_color[0] = 0.3f; 
+    br_cover.fill_color[1] = 0.6f; 
+    br_cover.fill_color[2] = 1.0f;
+    br_cover.outline_color[0] = 0.3f;
+    br_cover.outline_color[1] = 0.6f;
+    br_cover.outline_color[2] = 1.0f;
     graphics::drawRect(x, y + 1.0f, size, 0.2f, br_cover);
     // Draw health text
     graphics::Brush br_text;

@@ -36,6 +36,9 @@
     <ClCompile Include="3240089_3240037\troop.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="3240089_3240037\ai_system.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3240089_3240037\entity.h">
@@ -54,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="3240089_3240037\troop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="3240089_3240037\ai_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
