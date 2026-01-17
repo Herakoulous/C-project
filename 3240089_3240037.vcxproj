@@ -140,8 +140,10 @@
     <ClCompile Include="3240089_3240037\global_state.cpp" />
     <ClCompile Include="3240089_3240037\graph.cpp" />
     <ClCompile Include="3240089_3240037\hover_menu.cpp" />
+    <ClCompile Include="3240089_3240037\level_manager.cpp" />
     <ClCompile Include="3240089_3240037\main.cpp" />
     <ClCompile Include="3240089_3240037\node.cpp" />
+    <ClCompile Include="3240089_3240037\pause_menu.cpp" />
     <ClCompile Include="3240089_3240037\troop.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -150,7 +152,9 @@
     <ClInclude Include="3240089_3240037\global_state.h" />
     <ClInclude Include="3240089_3240037\graph.h" />
     <ClInclude Include="3240089_3240037\hover_menu.h" />
+    <ClInclude Include="3240089_3240037\level_manager.h" />
     <ClInclude Include="3240089_3240037\node.h" />
+    <ClInclude Include="3240089_3240037\pause_menu.h" />
     <ClInclude Include="3240089_3240037\troop.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

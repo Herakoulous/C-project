@@ -1,15 +1,15 @@
 ﻿#include "global_state.h"
-#include "ai_system.h"  // Include AI system
+#include "ai_system.h"
 #include "sgg/graphics.h"
 #include <algorithm>
 #include <cmath>
-
 
 GlobalState* GlobalState::instance = nullptr;
 
 GlobalState::GlobalState() : selected_entity(nullptr),
 target_selection_wizard(nullptr), target_selection_spell_id(-1),
-ai_system(nullptr) {  // Initialize to nullptr
+ai_system(nullptr) {
+    // Ο constructor του pause_menu και level_manager καλούνται αυτόματα
 }
 
 GlobalState* GlobalState::getInstance() {
@@ -19,7 +19,69 @@ GlobalState* GlobalState::getInstance() {
     return instance;
 }
 
+void GlobalState::init() {
+    initLevel(1); // Start from level 1
+}
+
+void GlobalState::initLevel(int level) {
+    entities.clear();
+    troops.clear();
+    attack_effects.clear();
+    entity_graph.clear();
+    selected_entity = nullptr;
+    hover_menu.hide();
+    ready_spells.clear();
+    target_selection_wizard = nullptr;
+    target_selection_spell_id = -1;
+    pause_menu.reset();
+
+    // Clean up AI system if it exists
+    if (ai_system) {
+        delete ai_system;
+        ai_system = nullptr;
+    }
+
+    // Initialize the level
+    level_manager.initLevel(level, entities, entity_graph);
+
+    // Create AI system
+    ai_system = new AISystem(this, &entity_graph);
+    if (ai_system) {
+        ai_system->init();
+    }
+
+    // Update pause menu button positions
+    pause_menu.updateButtonPositions(level_manager.hasNextLevel());
+}
+
 void GlobalState::update(float dt) {
+    // Check pause menu first
+    graphics::MouseState mouse;
+    graphics::getMouseState(mouse);
+    float canvas_x = graphics::windowToCanvasX((float)mouse.cur_pos_x);
+    float canvas_y = graphics::windowToCanvasY((float)mouse.cur_pos_y);
+
+    pause_menu.update(canvas_x, canvas_y, mouse.button_left_pressed);
+
+    // If game is paused, handle menu clicks
+    if (pause_menu.isGamePaused()) {
+        if (pause_menu.isResumeClicked()) {
+            pause_menu.resumeGame();
+        }
+        else if (pause_menu.isRestartClicked()) {
+            initLevel(level_manager.getCurrentLevel());  // Restart current level
+        }
+        else if (pause_menu.isNextLevelClicked()) {
+            // Go to next level
+            int next_level = level_manager.getCurrentLevel() + 1;
+            if (next_level <= level_manager.getMaxLevels()) {
+                initLevel(next_level);
+            }
+        }
+        return;
+    }
+
+    // Normal game update
     for (auto& entity : entities) {
         entity->update(dt);
     }
@@ -38,59 +100,55 @@ void GlobalState::update(float dt) {
         ai_system->update(dt);
     }
 
-    graphics::MouseState mouse;
-    graphics::getMouseState(mouse);
-    float canvas_x = graphics::windowToCanvasX((float)mouse.cur_pos_x);
-    float canvas_y = graphics::windowToCanvasY((float)mouse.cur_pos_y);
-
     handleHoverMenu(canvas_x, canvas_y);
     handleMouseInput(canvas_x, canvas_y, mouse.button_left_pressed);
 }
 
-void GlobalState::init() {
-    entities.clear();
-    troops.clear();
-    attack_effects.clear();
-    entity_graph.clear();
-    selected_entity = nullptr;
+void GlobalState::draw() {
+    graphics::Brush bg;
+    bg.fill_color[0] = 0.3f;
+    bg.fill_color[1] = 0.6f;
+    bg.fill_color[2] = 1.0f;
+    graphics::drawRect(8.0f, 4.0f, 16.0f, 8.0f, bg);
 
-    // Clean up AI system if it exists
-    if (ai_system) {
-        delete ai_system;
-        ai_system = nullptr;
+    entity_graph.draw();
+
+    for (auto& entity : entities) {
+        entity->draw();
     }
 
-    // Initialize player entities
-    entities.push_back(std::make_unique<Warrior>(3.5f, 3.0f, 200, Side::PLAYER));
-    entities.push_back(std::make_unique<Wizard>(1.5f, 3.5f, 10, Side::PLAYER));
-    entities.push_back(std::make_unique<Baby>(3.5f, 1.0f, 10, Side::NEUTRAL));
-    entities.push_back(std::make_unique<Baby>(1.5f, 1.5f, 10, Side::NEUTRAL));
-
-    // Neutral towers
-    entities.push_back(std::make_unique<Tower>(8.0f, 4.0f, 10, Side::NEUTRAL));
-    entities.push_back(std::make_unique<Tower>(16 - 5.5f, 1.5f, 10, Side::NEUTRAL));
-    entities.push_back(std::make_unique<Tower>(5.5f, 8 - 1.4f, 10, Side::NEUTRAL));
-
-    // Enemy entities (AI will control these)
-    entities.push_back(std::make_unique<Warrior>(16 - 3.5f, 8 - 3.0f, 15, Side::ENEMY));
-    entities.push_back(std::make_unique<Wizard>(16 - 1.5f, 8 - 3.5f, 10, Side::ENEMY));
-    entities.push_back(std::make_unique<Baby>(16 - 3.5f, 8 - 1.0f, 10, Side::ENEMY));
-    entities.push_back(std::make_unique<Baby>(16 - 1.5f, 8 - 1.5f, 10, Side::NEUTRAL));
-
-    // Create graph connections
-    for (size_t i = 0; i < entities.size(); i++) {
-        for (size_t j = i + 1; j < entities.size(); j++) {
-            entity_graph.addEdge(entities[i].get(), entities[j].get());
-        }
+    for (auto& troop : troops) {
+        troop->draw();
     }
 
-    entity_graph.calculatePaths(entities);
+    drawAttackEffects();
 
-    // Create AI system
-    ai_system = new AISystem(this, &entity_graph);
-    if (ai_system) {
-        ai_system->init();
+    if (selected_entity) {
+        graphics::Brush hl;
+        hl.fill_color[0] = hl.fill_color[1] = 1.0f; hl.fill_color[2] = 0.0f;
+        hl.fill_opacity = 0.0f;
+        hl.outline_opacity = 1.0f;
+        hl.outline_width = 3.0f;
+        graphics::drawDisk(selected_entity->getX(), selected_entity->getY(),
+            selected_entity->getSize() + 0.1f, hl);
     }
+
+    hover_menu.draw();
+
+    drawReadySpells();
+    drawHealthBars();
+
+    // Draw level indicator
+    graphics::Brush level_br;
+    level_br.fill_color[0] = 1.0f;
+    level_br.fill_color[1] = 1.0f;
+    level_br.fill_color[2] = 1.0f;
+    graphics::drawText(0.5f, 0.5f, 0.2f,
+        "LEVEL " + std::to_string(level_manager.getCurrentLevel()) +
+        "/" + std::to_string(level_manager.getMaxLevels()), level_br);
+
+    // Draw pause menu (draws pause button always, and menu if paused)
+    pause_menu.draw();
 }
 
 // Add destructor
@@ -791,39 +849,4 @@ void GlobalState::handleMouseInput(float canvas_x, float canvas_y, bool mouse_pr
             handleEntityClick(canvas_x, canvas_y);
         }
     }
-}
-
-void GlobalState::draw() {
-    graphics::Brush bg;
-    bg.fill_color[0] = 0.3f;
-    bg.fill_color[1] = 0.6f;
-    bg.fill_color[2] = 1.0f;
-    graphics::drawRect(8.0f, 4.0f, 16.0f, 8.0f, bg);
-
-    entity_graph.draw();
-
-    for (auto& entity : entities) {
-        entity->draw();
-    }
-
-    for (auto& troop : troops) {
-        troop->draw();
-    }
-
-    drawAttackEffects();
-
-    if (selected_entity) {
-        graphics::Brush hl;
-        hl.fill_color[0] = hl.fill_color[1] = 1.0f; hl.fill_color[2] = 0.0f;
-        hl.fill_opacity = 0.0f;
-        hl.outline_opacity = 1.0f;
-        hl.outline_width = 3.0f;
-        graphics::drawDisk(selected_entity->getX(), selected_entity->getY(),
-            selected_entity->getSize() + 0.1f, hl);
-    }
-
-    hover_menu.draw();
-
-    drawReadySpells();
-    drawHealthBars();
 }

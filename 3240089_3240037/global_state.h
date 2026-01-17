@@ -1,9 +1,11 @@
-#pragma once
+﻿#pragma once
 #include "node.h"
 #include "entity.h"
 #include "hover_menu.h"
 #include "troop.h"
 #include "graph.h"
+#include "pause_menu.h"
+#include "level_manager.h"  // ΠΡΟΣΘΗΚΗ
 #include <vector>
 #include <memory>
 
@@ -21,7 +23,9 @@ private:
     EntityGraph entity_graph;
     Entity* selected_entity;
     HoverMenu hover_menu;
-    AISystem* ai_system;  // Changed to pointer
+    AISystem* ai_system;
+    PauseMenu pause_menu;
+    LevelManager level_manager;  // ΠΡΟΣΘΗΚΗ
 
     struct ReadySpell {
         Wizard* wizard;
@@ -55,6 +59,7 @@ public:
     GlobalState& operator=(const GlobalState&) = delete;
 
     void init();
+    void initLevel(int level = 1);  // ΝΕΗ ΣΥΝΑΡΤΗΣΗ
     void update(float dt);
     void draw();
 
@@ -63,6 +68,8 @@ public:
     EntityGraph& getGraph() { return entity_graph; }
     Entity* getSelectedEntity() const { return selected_entity; }
     HoverMenu& getHoverMenu() { return hover_menu; }
+    PauseMenu& getPauseMenu() { return pause_menu; }
+    LevelManager& getLevelManager() { return level_manager; }  // ΠΡΟΣΘΗΚΗ
     std::pair<int, int> calculateTotalHealth() const;
     void drawHealthBars();
 
