@@ -25,4 +25,5 @@ private:
     void initLevel1(std::vector<std::unique_ptr<Entity>>& entities, EntityGraph& graph);
     void initLevel2(std::vector<std::unique_ptr<Entity>>& entities, EntityGraph& graph);
 	void initLevel3(std::vector<std::unique_ptr<Entity>>& entities, EntityGraph& graph);
+
 };
